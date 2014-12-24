@@ -69,14 +69,15 @@ public class DBConnection {
     
     public ArrayList selectDataLagu()
     {
-        query = "SELECT Title FROM lagu";
+        query = "SELECT Title, Path FROM lagu WHERE Status = 1 LIMIT 5";
         ArrayList listTitle = new ArrayList();
         try {
             setRstt(getStt().executeQuery(query));
             while(getRstt().next())
             {
                 String title = getRstt().getString("Title");
-                listTitle.add(title);
+                String path = getRstt().getString("Path");
+                listTitle.add(title+"|"+path);
             }
         } catch (SQLException ex) {
             Logger.getLogger(DBConnection.class.getName()).log(Level.SEVERE, null, ex);

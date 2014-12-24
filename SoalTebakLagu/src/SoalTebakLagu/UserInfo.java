@@ -17,8 +17,18 @@ public class UserInfo {
     public static void main(String[] args) {
         // TODO code application logic here
         DBConnection connection = new DBConnection();
-        Soal soal = new Soal();
-        soal.getListJudul();
+        Soal soalA = new Soal();
+        Soal soalB = new Soal();
+        Soal soalC = new Soal();
+        Soal soalD = new Soal();
+        Soal soalE = new Soal();
+        int i = 0;
+        System.out.println("SOAL A : ");soalA.getListJudul(i++);
+        System.out.println("SOAL B : ");soalB.getListJudul(i++);
+        System.out.println("SOAL C : ");soalC.getListJudul(i++);
+        System.out.println("SOAL D : ");soalD.getListJudul(i++);
+        System.out.println("SOAL E : ");soalE.getListJudul(i++);
+        
     }
     
 }

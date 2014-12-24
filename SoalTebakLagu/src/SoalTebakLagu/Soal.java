@@ -17,8 +17,11 @@ public class Soal {
     private String status;
     private String jawaban;
     private ArrayList<String> listJudul;
+    private ArrayList<String> listJudulRan;
     private ArrayList<String> listTempJudul;
     private ArrayList<String> listTempLagu;
+    private String judulLagu;
+    private String pathLagu;
     
     DBConnection connection;
     public Soal()
@@ -71,21 +74,37 @@ public class Soal {
     /**
      * @return the listJudul
      */
-    public ArrayList<String> getListJudul() {
+    public ArrayList<String> getListJudul(int nextSong) {
         listTempJudul = connection.selectDataJudul();
         listTempLagu = connection.selectDataLagu();
+        listJudulRan = new ArrayList<>();
         for (int i = 0; i < listTempJudul.size(); i++) {
-                int index = new Random().nextInt(listTempJudul.size());
-                String randomJudul = listTempJudul.get(index);
-                
-                if(listJudul.contains(randomJudul) == false && listJudul.size() < 3)
-                    listJudul.add(randomJudul);   
+            int index = new Random().nextInt(listTempJudul.size());
+            String judulRan = listTempJudul.get(index);
+            if(listJudulRan.contains(judulRan) == false && listJudulRan.size() < 3)
+            {
+                listJudulRan.add(judulRan);
             }
-        int index = new Random().nextInt(listTempLagu.size());
-        String randomLagu = listTempLagu.get(index);
-        //System.out.println(randomLagu);    
-        listJudul.add(randomLagu);
-        System.out.println(listJudul);
+        }
+        String randomLagu = listTempLagu.get(nextSong);
+        int idx = randomLagu.indexOf('|');
+        pathLagu = randomLagu.substring(idx +1);
+        String judulLagu = randomLagu.substring(0, idx);
+            System.out.println(judulLagu + " -> " + pathLagu);
+        listJudulRan.add(judulLagu);
+        System.out.println("ini list lagu pilihan : "+listJudulRan.size()+listJudulRan);
+        
+        while (listJudul.size() < 4) {
+            for (int i = 0; i < listJudulRan.size(); i++) {
+                int index = new Random().nextInt(listJudulRan.size());
+                String randomJudul = listJudulRan.get(index);
+                if(listJudul.contains(randomJudul) == false && listJudul.size() < 4)
+                {
+                    listJudul.add(randomJudul);
+                }
+            }   
+        }
+        System.out.println("OPTION : "+listJudul.size()+listJudul);
         return listJudul;
     }
 
