@@ -38,21 +38,9 @@ public class DBConnection {
         }
     }
     
-    /*public void setDataPlayer()
-    {
-        query = "INSERT INTO player (ID_Player, Password) VALUER ('"+this.addr+"',)";
-        try {
-            rstt = stt.executeQuery(query);
-        } catch (SQLException ex) {
-            Logger.getLogger(DBConnection.class.getName()).log(Level.SEVERE, null, ex);
-        }
-    }*/
-    
     public ArrayList selectDataJudul()
     {
         query = "SELECT Judul FROM judul";
-        //String queryTitle = "SELECT Title, Path, Status FROM lagu";
-        //int random = 3;
         ArrayList listJudul = new ArrayList();
         try {
             setRstt(getStt().executeQuery(query));
@@ -85,27 +73,25 @@ public class DBConnection {
         return listTitle;
     }
     
-    /*public void selectDataPlayer()
+    public ArrayList selectDataPlayer()
     {
-        query = "SELECT * FROM player WHERE ID_Player='"+this+"'";
+        query = "SELECT * FROM player";
+        ArrayList listID_Player = new ArrayList();
         try {
             rstt = stt.executeQuery(query);
             while(rstt.next())
             {
-                String passwd = rstt.getString("Passwd");
+                String idPlayer = rstt.getString("ID_Player");
+                String passwd = rstt.getString("Password");
+                String score = rstt.getString("Score");
+                listID_Player.add(idPlayer+"|"+passwd);
             }
-            if(this.passwd == passwd)
-            {
-                System.out.println("berhasil login");
-            }
-            else
-            {
-                System.out.println("Your Username or Password Incorrect");
-            }
+            System.out.println(listID_Player);
         } catch (SQLException ex) {
             Logger.getLogger(DBConnection.class.getName()).log(Level.SEVERE, null, ex);
         }
-    }*/
+        return listID_Player;
+    }
             
     public  void getDataPlayer()
     {

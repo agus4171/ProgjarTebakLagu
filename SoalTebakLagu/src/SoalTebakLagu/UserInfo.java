@@ -28,7 +28,7 @@ public class UserInfo {
         System.out.println("SOAL C : ");soalC.getListJudul(i++);
         System.out.println("SOAL D : ");soalD.getListJudul(i++);
         System.out.println("SOAL E : ");soalE.getListJudul(i++);
-        
+        connection.selectDataPlayer();
     }
     
 }
