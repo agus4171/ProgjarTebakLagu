@@ -91,7 +91,7 @@ public class LogggController implements Initializable {
     @FXML
     private void onEnter(ActionEvent event) throws ClassNotFoundException, Throwable {
         try {
-            client =new socketio("localhost", 9000);
+            client =new socketio("10.151.36.24", 9000);
             cmd response = new cmd();
             cmd login =new cmd();
             login.setCommand("LOGIN");

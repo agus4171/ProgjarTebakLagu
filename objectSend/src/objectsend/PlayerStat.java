@@ -13,7 +13,7 @@ import java.io.Serializable;
  */
 public class PlayerStat implements Serializable{
     private String name;
-    private int skor;
+    private double skor;
 
     /**
      * @return the name
@@ -32,14 +32,14 @@ public class PlayerStat implements Serializable{
     /**
      * @return the skor
      */
-    public int getSkor() {
+    public double getSkor() {
         return skor;
     }
 
     /**
      * @param skor the skor to set
      */
-    public void setSkor(int skor) {
+    public void setSkor(double skor) {
         this.skor = skor;
     }
 }

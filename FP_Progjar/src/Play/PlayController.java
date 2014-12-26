@@ -38,6 +38,7 @@ import javafx.util.Duration;
 import objectsend.PlayerStat;
 import objectsend.cmd;
 import objectsend.file;
+import objectsend.jawabanSoal;
 import objectsend.roomsAttr;
 import room.InRoomController;
 
@@ -71,13 +72,13 @@ public class PlayController extends Thread implements Initializable {
     @FXML
     private Button cancelBtn;
     private String roomName;
-    
+    private jawabanSoal jSoal;
     
     private AnchorPane mainPane;
     private sockClass.socketio SockClient;
     private boolean timerBoolA=true;
     private boolean timerBoolB=true;
-    
+    private long starTime;
     private static boolean Tbool;
     private ArrayList<ArrayList<String>> theSoal;
     /**
@@ -88,13 +89,13 @@ public class PlayController extends Thread implements Initializable {
         AChoice.setDisable(true);
         BChoice.setDisable(true);
         CChoice.setDisable(true);
-        DChoice.setDefaultButton(true);
+        DChoice.setDisable(true);
         playerName = new TableColumn<>("Name");
         playerSkor = new TableColumn<>("Score");
         playerName.setCellValueFactory(new PropertyValueFactory("name"));
         playerSkor.setCellValueFactory(new PropertyValueFactory("skor"));
-        playerName.prefWidthProperty().bind(scoreBoard.widthProperty().multiply(0.25));
-        playerSkor.prefWidthProperty().bind(scoreBoard.widthProperty().multiply(0.25));
+        playerName.prefWidthProperty().bind(scoreBoard.widthProperty().multiply(0.50));
+        playerSkor.prefWidthProperty().bind(scoreBoard.widthProperty().multiply(0.50));
         scoreBoard.getColumns().setAll(playerName,playerSkor);
         
     }
@@ -102,6 +103,7 @@ public class PlayController extends Thread implements Initializable {
     {
         Tbool=true;
         scoreBoard = new TableView<>();
+        jSoal=new jawabanSoal();
     }
     @Override
     public void run()
@@ -134,10 +136,7 @@ public class PlayController extends Thread implements Initializable {
                         if(rAttr.getCommand().equals("GAME") && rAttr.getArgument().equals("READY"))
                         {
                             loadingBar.setVisible(false);
-                            AChoice.setDisable(false);
-                            BChoice.setDisable(false);
-                            CChoice.setDisable(false);
-                            DChoice.setDefaultButton(false);
+                            
                             
                             Thread playSong = new Thread(new Runnable() {
 
@@ -149,11 +148,15 @@ public class PlayController extends Thread implements Initializable {
                                             final int j=i;
                                             int t=15;
                                             timerBoolA=true;
-                                            
+                                            jSoal.setJawaban("null");
+                                            jSoal.setWaktu(0);
+                                            starTime=System.currentTimeMillis();
                                             final Media media = new Media(new File("cache\\"+i+".mp3").toURI().toURL().toString());
+                                            
                                             final MediaPlayer mediaPlayer = new MediaPlayer(media);
                                             mediaPlayer.setStartTime(Duration.seconds(40.0));
                                             mediaPlayer.setStopTime(Duration.seconds(90.0));
+                                            
                                             mediaPlayer.play();
                                             Platform.runLater(new Runnable() {
                                                 
@@ -163,6 +166,10 @@ public class PlayController extends Thread implements Initializable {
                                                     BChoice.setText(theSoal.get(j).get(1));
                                                     CChoice.setText(theSoal.get(j).get(2));
                                                     DChoice.setText(theSoal.get(j).get(3));
+                                                    AChoice.setDisable(false);
+                                                    BChoice.setDisable(false);
+                                                    CChoice.setDisable(false);
+                                                    DChoice.setDisable(false);
                                                 }
                                             });
                                             while(timerBoolA)
@@ -172,19 +179,34 @@ public class PlayController extends Thread implements Initializable {
                                                     t--;
                                                     System.out.println(t);
                                                     if(t==0)
-                                                    {
-                                                        mediaPlayer.stop();
+                                                    {  
                                                         timerBoolA=false;
                                                     }
                                                 } catch (InterruptedException ex) {
                                                     Logger.getLogger(PlayController.class.getName()).log(Level.SEVERE, null, ex);
                                                 }
                                             }
+                                            mediaPlayer.stop();
                                         } catch (MalformedURLException ex) {
                                             Logger.getLogger(PlayController.class.getName()).log(Level.SEVERE, null, ex);
                                         }
 
                                     }
+                                    Platform.runLater(new Runnable() {
+
+                                        @Override
+                                        public void run() {
+                                            AChoice.setDisable(true);
+                                            BChoice.setDisable(true);
+                                            CChoice.setDisable(true);
+                                            DChoice.setDisable(true);
+                                            AChoice.setText("A");
+                                            BChoice.setText("B");
+                                            CChoice.setText("C");
+                                            DChoice.setText("D");
+                                        }
+                                    });
+                                    
                                 }
                             });
                             playSong.start();
@@ -330,19 +352,62 @@ public class PlayController extends Thread implements Initializable {
         
     }
     @FXML
-    private void ChooseA(MouseEvent event) {
+    private void ChooseA(MouseEvent event) throws IOException {
+        long calculate = System.currentTimeMillis()-starTime;
+        jSoal.setJawaban(AChoice.getText());
+        jSoal.setWaktu(calculate);
+        SockClient.sendobject(jSoal);
+        System.out.println(jSoal);
+        AChoice.setDisable(true);
+        BChoice.setDisable(true);
+        CChoice.setDisable(true);
+        DChoice.setDisable(true);
+        timerBoolA=false;
     }
 
     @FXML
-    private void ChooseB(MouseEvent event) {
+    private void ChooseB(MouseEvent event) throws IOException {
+        long calculate = System.currentTimeMillis()-starTime;
+        jSoal.setJawaban(BChoice.getText());
+        jSoal.setWaktu(calculate);
+        SockClient.sendobject(jSoal);
+        System.out.println(jSoal);
+        AChoice.setDisable(true);
+        BChoice.setDisable(true);
+        CChoice.setDisable(true);
+        DChoice.setDisable(true);
+        
+        timerBoolA=false;
     }
 
     @FXML
-    private void ChooseC(MouseEvent event) {
+    private void ChooseC(MouseEvent event) throws IOException {
+        long calculate = System.currentTimeMillis()-starTime;
+        jSoal.setJawaban(CChoice.getText());
+        jSoal.setWaktu(calculate);
+        SockClient.sendobject(jSoal);
+        System.out.println(jSoal);
+        AChoice.setDisable(true);
+        BChoice.setDisable(true);
+        CChoice.setDisable(true);
+        DChoice.setDisable(true);
+        
+        timerBoolA=false;
     }
 
     @FXML
-    private void ChooseD(MouseEvent event) {
+    private void ChooseD(MouseEvent event) throws IOException {
+        long calculate = System.currentTimeMillis()-starTime;
+        jSoal.setJawaban(DChoice.getText());
+        jSoal.setWaktu(calculate);
+        SockClient.sendobject(jSoal);
+        System.out.println(jSoal);
+        AChoice.setDisable(true);
+        BChoice.setDisable(true);
+        CChoice.setDisable(true);
+        DChoice.setDisable(true);
+        
+        timerBoolA=false;
     }
     
 }
