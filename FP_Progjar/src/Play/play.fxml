@@ -47,12 +47,20 @@
             <ProgressBar fx:id="loadingBar" layoutX="72.0" layoutY="146.0" prefHeight="18.0" prefWidth="258.0" />
          </children>
       </Pane>
-      <Label layoutX="22.0" layoutY="17.0" text="Answer" textFill="WHITE" />
+      <Label fx:id="soalMsg" layoutX="22.0" layoutY="12.0" text="Tebak Judul Lagu Berikut" textFill="WHITE">
+         <font>
+            <Font size="18.0" />
+         </font></Label>
       <TableView fx:id="scoreBoard" layoutX="425.0" layoutY="140.0" prefHeight="169.0" prefWidth="150.0">
         <columns>
           <TableColumn prefWidth="76.0" text="C1" />
           <TableColumn prefWidth="74.0" text="C2" />
         </columns>
       </TableView>
+      <Label fx:id="timer" layoutX="314.0" layoutY="12.0" prefHeight="27.0" prefWidth="79.0" text="Time: 00" textFill="#fffafa">
+         <font>
+            <Font size="18.0" />
+         </font>
+      </Label>
    </children>
 </Pane>

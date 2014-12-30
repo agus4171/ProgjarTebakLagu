@@ -6,17 +6,17 @@
 package room;
 
 import Play.PlayController;
+import static fp_progjar.FP_Progjar.loaders;
+import static fp_progjar.FP_Progjar.nodes;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
@@ -32,7 +32,7 @@ import objectsend.cmd;
  *
  * @author Administrator
  */
-public class InRoomController extends Thread implements Initializable {
+public class InRoomController implements Initializable {
     @FXML
     private TextArea chatArea;
     @FXML
@@ -58,6 +58,7 @@ public class InRoomController extends Thread implements Initializable {
     private String hak;
     private String roomName;
     private static boolean Tbool;
+    
     /**
      * Initializes the controller class.
      */
@@ -73,22 +74,24 @@ public class InRoomController extends Thread implements Initializable {
     }    
     public InRoomController() throws IOException
     {
-        Tbool=true;
+        
         
         
     }
-    @Override
-    public void run()
+    
+    public void listener()
     {
-        cmd response;
+        
         
         Object o;
         while(Tbool)
         {
-            
+            final cmd response;
             try {
                 if(SockClient!=null){
-                    o =  SockClient.readobject();
+                    synchronized(SockClient){
+                        o =  SockClient.readobject();
+                    }
                     
                     if(o instanceof cmd)
                     {
@@ -96,7 +99,13 @@ public class InRoomController extends Thread implements Initializable {
                         System.out.println(response.getChattext());
                         if(response.getCommand().equals("CHAT") && response.getArgument().equals("USER"))
                         {
-                            chatArea.appendText(response.getChattext());
+                            Platform.runLater(new Runnable() {
+
+                                @Override
+                                public void run() {
+                                    chatArea.appendText(response.getChattext());
+                                }
+                            });
                         }
                         
                         if(response.getCommand().equals("STARTING") && response.getArgument().equals("GAME"))
@@ -107,16 +116,20 @@ public class InRoomController extends Thread implements Initializable {
                                 @Override
                                 public void run() {
                                     try {
-                                        FXMLLoader loader =  new FXMLLoader(Play.PlayController.class.getResource("play.fxml"));
-                          
                                         mainPane.getChildren().clear();
                                         PlayController Controller;
-                                        mainPane.getChildren().add((Node)loader.load());
-                                        Controller = loader.getController();
+                                        if(nodes.size()<6){
+                                            Node node= (Node) loaders.get(5).load();
+                                            mainPane.getChildren().add(node);
+                                            nodes.add(node);
+                                        }
+                                        else mainPane.getChildren().add(nodes.get(5));
+                                        
+                                        Controller = loaders.get(5).getController();
                                         Controller.setMainPane(mainPane);
                                         Controller.setSocket(SockClient);
                                         Controller.setRoomName(roomName);
-                                        loader.setController(Controller);
+                                        loaders.get(5).setController(Controller);
                                         
                                     } catch (IOException ex) {
                                         Logger.getLogger(InRoomController.class.getName()).log(Level.SEVERE, null, ex);
@@ -169,12 +182,14 @@ public class InRoomController extends Thread implements Initializable {
     public void setMainPane(AnchorPane mainPane)
     {
         this.mainPane=mainPane;
+        
     }
     public void setOwner(String roomName)
     {
         this.hak="OWNER";
         this.roomName=roomName;
         this.roomLabel.setText(roomName);
+        this.startGame.setDisable(false);
     }
     public void setFollower(String roomName)
     {
@@ -185,10 +200,18 @@ public class InRoomController extends Thread implements Initializable {
     }
     public void setSocket(final sockClass.socketio SockClient)
     {
+        Tbool=true;
         this.SockClient =SockClient;
         staticSocket=SockClient;
-        this.start();
+        chatArea.setText("");
         final cmd request=new cmd();
+        Thread listen= new Thread(new Runnable() {
+
+            @Override
+            public void run() {
+                listener();
+            }
+        });
         Thread t =new Thread(new Runnable() {
             @Override
             public void run() {
@@ -199,7 +222,7 @@ public class InRoomController extends Thread implements Initializable {
                     
                     try {
                         SockClient.sendobject(request);
-                        Thread.sleep(1000);
+                        Thread.sleep(2000);
                     } catch (IOException ex) {
                         Logger.getLogger(InRoomController.class.getName()).log(Level.SEVERE, null, ex);
                     } catch (InterruptedException ex) {
@@ -210,6 +233,8 @@ public class InRoomController extends Thread implements Initializable {
             }
         });
         t.start();
+        listen.start();
+        
         
     }
     @FXML
@@ -224,13 +249,26 @@ public class InRoomController extends Thread implements Initializable {
 
     @FXML
     private void onCancel(MouseEvent event) throws IOException {
-        Tbool = false;
-        if(staticSocket!=null)
-        {
-            cmd command = new cmd();
-            command.setCommand("DUMMy");
+        Tbool=false;
+        if(staticSocket!=null){
+            cmd command= new cmd();
+            command.setCommand("DUMMY");
+            command.setArgument("EXITROOM");
             staticSocket.sendobject(command);
         }
+        
+        mainPane.getChildren().clear();
+        
+        ListroomController Controller;
+        mainPane.getChildren().add(nodes.get(2));
+        
+        
+        Controller = loaders.get(2).getController();
+
+        Controller.setMainPane(mainPane);
+        Controller.setSocket(SockClient);
+
+        loaders.get(2).setController(Controller);
     }
 
     @FXML
@@ -241,9 +279,9 @@ public class InRoomController extends Thread implements Initializable {
         chat.setArgument("ROOM");
         chat.setRoomName(roomName);
         chat.setChattext(chatMsg);
-        synchronized(SockClient){
+        
             SockClient.sendobject(chat);
-        }
+        
         this.chatText.setText("");
     }
     

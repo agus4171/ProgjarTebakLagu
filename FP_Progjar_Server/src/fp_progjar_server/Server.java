@@ -10,12 +10,9 @@ import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.ServerSocket;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.print.attribute.standard.Media;
-import soal.*;
 
 /**
  *
@@ -28,8 +25,6 @@ public class Server {
      * @throws java.lang.InterruptedException
      */
     public static void main(String[] args) throws InterruptedException, MalformedURLException {
-      
-          
         ArrayList<handler> alhandler;
         ArrayList<room> rooms;
         new File("cache").mkdir();

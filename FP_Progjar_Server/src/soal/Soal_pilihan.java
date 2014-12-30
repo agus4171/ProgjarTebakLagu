@@ -17,10 +17,12 @@ public class Soal_pilihan {
     private String status;
     private String jawaban;
     private File lagu;
-    private ArrayList<String> listJudul;
+    
     private ArrayList<String> listJudulRan;
     private ArrayList<String> listTempJudul;
+    
     private ArrayList<String> listTempLagu;
+    private ArrayList<String> listLaguRan;
     private String judulLagu;
     private String pathLagu;
     
@@ -28,7 +30,7 @@ public class Soal_pilihan {
     
     public Soal_pilihan()
     {
-        listJudul = new ArrayList<>();
+        
         connection = new db_connection();
     }
     
@@ -49,8 +51,9 @@ public class Soal_pilihan {
     /**
      * @return the jawaban
      */
-    public String getJawaban() {
-        return jawaban;
+    public String getJawaban(String pilihLagu) {
+        return connection.pilihJudul(pilihLagu);
+        //return jawaban;
     }
 
     /**
@@ -63,42 +66,60 @@ public class Soal_pilihan {
     /**
      * @return the listJudul
      */
-    
-    public ArrayList<String> getListJudul(int nextSong, int level) {
-        listTempJudul = connection.selectDataJudul();
+    public void queryLagu(int level)
+    {
         listTempLagu = connection.selectDataLagu(level);
+        listLaguRan = new ArrayList<>();
+        while(listLaguRan.size()<listTempLagu.size()) {
+            int indexRan = new Random().nextInt(listTempLagu.size());
+            String laguRan = listTempLagu.get(indexRan);
+            
+            if(listLaguRan.contains(laguRan) == false)
+            {
+                listLaguRan.add(laguRan);
+            }
+        }
+        System.out.println(listTempLagu.size()+ " " +listLaguRan.size());
         
+    }
+    public ArrayList<String> getListJudul(int nextSong) {
+        listTempJudul = connection.selectDataJudul();
+        //random pilihan dari tabel judul
         listJudulRan = new ArrayList<>();
         for (int i = 0; i < listTempJudul.size(); i++) {
             int index = new Random().nextInt(listTempJudul.size());
             String judulRan = listTempJudul.get(index);
+            
             if(listJudulRan.contains(judulRan) == false && listJudulRan.size() < 3)
             {
                 listJudulRan.add(judulRan);
             }
         }
-        String randomLagu = listTempLagu.get(nextSong);
+        //random pilihan dari tabel lagu
+        
+        String randomLagu = listLaguRan.get(nextSong);
         int idx = randomLagu.indexOf('|');
         pathLagu = randomLagu.substring(idx +1);
         String judulLagu = randomLagu.substring(0, idx);
-            System.out.println(judulLagu + " -> " + pathLagu);
+        //    System.out.println(judulLagu + " -> " + pathLagu);
         listJudulRan.add(judulLagu);
         
         lagu = new File(pathLagu);
         //System.out.println(lagu.getAbsolutePath());
         //System.out.println("ini list lagu pilihan : "+listJudulRan.size()+listJudulRan);
-        
+        ArrayList<String> listJudul;
+        listJudul = new ArrayList<>();
         while (listJudul.size() < 4) {
             for (int i = 0; i < listJudulRan.size(); i++) {
                 int index = new Random().nextInt(listJudulRan.size());
                 String randomJudul = listJudulRan.get(index);
                 if(listJudul.contains(randomJudul) == false && listJudul.size() < 4)
                 {
-                    listJudul.add(randomJudul);
+                    listJudul.add(randomJudul);    
                 }
             }   
         }
-        System.out.println("OPTION : "+listJudul.size()+listJudul);
+        System.out.println("OPTION : "+listJudul);
         return listJudul;
     }
     
@@ -106,12 +127,4 @@ public class Soal_pilihan {
     {
         return this.lagu.getAbsolutePath();
     }
-
-    /**
-     * @param listJudul the listJudul to set
-     */
-    public void setListJudul(ArrayList<String> listJudul) {
-        this.listJudul = listJudul;
-    }
-    
 }

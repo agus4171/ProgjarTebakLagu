@@ -5,12 +5,13 @@
  */
 package Play;
 
+import static fp_progjar.FP_Progjar.loaders;
+import static fp_progjar.FP_Progjar.nodes;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.ServerSocket;
-import java.net.Socket;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.ResourceBundle;
@@ -20,10 +21,9 @@ import javafx.application.Platform;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
-import javafx.scene.Node;
 import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
@@ -41,17 +41,20 @@ import objectsend.file;
 import objectsend.jawabanSoal;
 import objectsend.roomsAttr;
 import room.InRoomController;
+import room.ListroomController;
 
 /**
  * FXML Controller class
  *
  * @author Administrator
  */
-public class PlayController extends Thread implements Initializable {
+public class PlayController implements Initializable {
     @FXML
     private TextArea chatArea;
     @FXML
     private TextField chatText;
+    @FXML
+    private Label timer;
     @FXML
     private Button AChoice;
     @FXML
@@ -76,11 +79,12 @@ public class PlayController extends Thread implements Initializable {
     
     private AnchorPane mainPane;
     private sockClass.socketio SockClient;
-    private boolean timerBoolA=true;
-    private boolean timerBoolB=true;
+    private static boolean timerBoolA=true;
     private long starTime;
     private static boolean Tbool;
+    private static sockClass.socketio staticSocket;
     private ArrayList<ArrayList<String>> theSoal;
+    
     /**
      * Initializes the controller class.
      */
@@ -105,8 +109,8 @@ public class PlayController extends Thread implements Initializable {
         scoreBoard = new TableView<>();
         jSoal=new jawabanSoal();
     }
-    @Override
-    public void run()
+    
+    public void listener()
     {
         cmd response;
         roomsAttr rAttr;
@@ -121,8 +125,8 @@ public class PlayController extends Thread implements Initializable {
                     if(o instanceof cmd)
                     {
                         response=(cmd) o;
-                        System.out.println(response.getArgument());
-                        System.out.println(response.getChattext());
+                        //System.out.println(response.getArgument());
+                        //System.out.println(response.getChattext());
                         if(response.getCommand().equals("CHAT") && response.getArgument().equals("USER"))
                         {
                             chatArea.appendText(response.getChattext());
@@ -138,15 +142,17 @@ public class PlayController extends Thread implements Initializable {
                             loadingBar.setVisible(false);
                             
                             
-                            Thread playSong = new Thread(new Runnable() {
-
+                            Thread playSong;
+                            playSong = new Thread(new Runnable() {
+                                
                                 @Override
                                 public void run() {
                                     for(int i=0;i<theSoal.size();i++)
                                     {
                                         try {
                                             final int j=i;
-                                            int t=15;
+                                            int t=30;
+                                            if(Tbool==false)break;
                                             timerBoolA=true;
                                             jSoal.setJawaban("null");
                                             jSoal.setWaktu(0);
@@ -154,7 +160,7 @@ public class PlayController extends Thread implements Initializable {
                                             final Media media = new Media(new File("cache\\"+i+".mp3").toURI().toURL().toString());
                                             
                                             final MediaPlayer mediaPlayer = new MediaPlayer(media);
-                                            mediaPlayer.setStartTime(Duration.seconds(40.0));
+                                            mediaPlayer.setStartTime(Duration.seconds(60.0));
                                             mediaPlayer.setStopTime(Duration.seconds(90.0));
                                             
                                             mediaPlayer.play();
@@ -175,9 +181,19 @@ public class PlayController extends Thread implements Initializable {
                                             while(timerBoolA)
                                             {
                                                 try {
+                                                    final String text="Time: " + t ;
+                                                    
+                                                    Platform.runLater(new Runnable() {
+
+                                                        @Override
+                                                        public void run() {
+                                                        timer.setText(text);
+                                                    
+                                                        }
+                                                    });
                                                     Thread.sleep(1000);
                                                     t--;
-                                                    System.out.println(t);
+                                                    
                                                     if(t==0)
                                                     {  
                                                         timerBoolA=false;
@@ -218,7 +234,7 @@ public class PlayController extends Thread implements Initializable {
                         try
                         {
                             final ArrayList<PlayerStat> players= (ArrayList<PlayerStat>) o;
-                            System.out.println("UPDATE SCOR");
+                            //System.out.println(players);
                             Platform.runLater(new Runnable() {
                                 @Override
                                 public void run() {
@@ -248,24 +264,29 @@ public class PlayController extends Thread implements Initializable {
     public void setMainPane(AnchorPane mainPane)
     {
         this.mainPane=mainPane;
+        
     }
     public void setSocket(final sockClass.socketio SockClient)
     {
+        Tbool=true;
+        loadingBar.setVisible(true);
         this.SockClient =SockClient;
-        this.start();
+        staticSocket=SockClient;
+        chatArea.setText("");
         Thread updateScoreBoard= new Thread(new Runnable() {
 
             @Override
             public void run() {
                 try {
-                    while(true)
+                    while(Tbool)
                     {
                         cmd command = new cmd();
                         command.setCommand("UPDATE");
                         command.setArgument("SCOREBOARD");
                         command.setRoomName(roomName);
-                        SockClient.sendobject(command);
-                        Thread.sleep(2000);
+                        synchronized(SockClient){
+                            SockClient.sendobject(command);
+                        }Thread.sleep(2000);
                     }
                     
                 } catch (IOException ex) {
@@ -275,7 +296,7 @@ public class PlayController extends Thread implements Initializable {
                 }
             }
         });
-        updateScoreBoard.start();
+        
         Thread songTransfer = new Thread(new Runnable() {
 
             @Override
@@ -286,7 +307,10 @@ public class PlayController extends Thread implements Initializable {
                     command.setCommand("START");
                     command.setArgument("TRANSFER");
                     command.setRoomName(roomName);
-                    SockClient.sendobject(command);
+                    synchronized(SockClient)
+                    {
+                        SockClient.sendobject(command);
+                    }
                     ServerSocket fileListener= new ServerSocket(9001);
                     sockClass.socketio transferSocket = new sockClass.socketio(fileListener.accept());
                     Object o=transferSocket.readobject();
@@ -319,6 +343,8 @@ public class PlayController extends Thread implements Initializable {
                         theSoal =(ArrayList<ArrayList<String>>) o;
                         
                     }
+                    fileListener.close();
+                    transferSocket.disconnect();
 
                 } catch (IOException ex) {
                     Logger.getLogger(PlayController.class.getName()).log(Level.SEVERE, null, ex);
@@ -327,7 +353,16 @@ public class PlayController extends Thread implements Initializable {
                 }
             }
         });
+        Thread listen= new Thread(new Runnable() {
+
+            @Override
+            public void run() {
+                listener();
+            }
+        });
+        listen.start();
         songTransfer.start();
+        updateScoreBoard.start();
     }
     public void setRoomName(String roomName)
     {
@@ -347,8 +382,32 @@ public class PlayController extends Thread implements Initializable {
         }
         this.chatText.setText("");
     }
-    public void cancelClick()
+    public void cancelClick() throws IOException
     {
+        cancel();
+        mainPane.getChildren().clear();
+        
+        ListroomController Controller;
+        mainPane.getChildren().add(nodes.get(2));
+        
+        
+        Controller = loaders.get(2).getController();
+
+        Controller.setMainPane(mainPane);
+        Controller.setSocket(SockClient);
+
+        loaders.get(2).setController(Controller);
+    }
+    public static void cancel() throws IOException
+    {
+        Tbool=false;
+        timerBoolA=false;
+        if(staticSocket!=null){
+            cmd command= new cmd();
+            command.setCommand("DUMMY");
+            command.setArgument("EXITROOM");
+            staticSocket.sendobject(command);
+        }
         
     }
     @FXML
@@ -356,8 +415,10 @@ public class PlayController extends Thread implements Initializable {
         long calculate = System.currentTimeMillis()-starTime;
         jSoal.setJawaban(AChoice.getText());
         jSoal.setWaktu(calculate);
-        SockClient.sendobject(jSoal);
-        System.out.println(jSoal);
+        synchronized(SockClient){
+            SockClient.sendobject(jSoal);
+        }
+        //System.out.println(jSoal);
         AChoice.setDisable(true);
         BChoice.setDisable(true);
         CChoice.setDisable(true);
@@ -370,8 +431,9 @@ public class PlayController extends Thread implements Initializable {
         long calculate = System.currentTimeMillis()-starTime;
         jSoal.setJawaban(BChoice.getText());
         jSoal.setWaktu(calculate);
-        SockClient.sendobject(jSoal);
-        System.out.println(jSoal);
+        synchronized(SockClient){
+            SockClient.sendobject(jSoal);
+        }//System.out.println(jSoal);
         AChoice.setDisable(true);
         BChoice.setDisable(true);
         CChoice.setDisable(true);
@@ -385,8 +447,9 @@ public class PlayController extends Thread implements Initializable {
         long calculate = System.currentTimeMillis()-starTime;
         jSoal.setJawaban(CChoice.getText());
         jSoal.setWaktu(calculate);
-        SockClient.sendobject(jSoal);
-        System.out.println(jSoal);
+        synchronized(SockClient){
+            SockClient.sendobject(jSoal);
+        }//System.out.println(jSoal);
         AChoice.setDisable(true);
         BChoice.setDisable(true);
         CChoice.setDisable(true);
@@ -400,8 +463,9 @@ public class PlayController extends Thread implements Initializable {
         long calculate = System.currentTimeMillis()-starTime;
         jSoal.setJawaban(DChoice.getText());
         jSoal.setWaktu(calculate);
-        SockClient.sendobject(jSoal);
-        System.out.println(jSoal);
+        synchronized(SockClient){
+            SockClient.sendobject(jSoal);
+        }//System.out.println(jSoal);
         AChoice.setDisable(true);
         BChoice.setDisable(true);
         CChoice.setDisable(true);

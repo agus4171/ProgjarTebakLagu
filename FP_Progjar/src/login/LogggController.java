@@ -5,6 +5,8 @@
  */
 package login;
 
+import static fp_progjar.FP_Progjar.loaders;
+import static fp_progjar.FP_Progjar.nodes;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
@@ -13,7 +15,6 @@ import java.util.logging.Logger;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -28,7 +29,6 @@ import javafx.scene.layout.VBoxBuilder;
 import javafx.scene.text.Text;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
-import javax.swing.JOptionPane;
 import objectsend.cmd;
 import room.ListroomController;
 import sockClass.socketio;
@@ -87,9 +87,8 @@ public class LogggController implements Initializable {
                 alignment(Pos.CENTER).padding(new Insets(5)).build()));
             dialogStage.show();
     }
-    
-    @FXML
-    private void onEnter(ActionEvent event) throws ClassNotFoundException, Throwable {
+    public  void login() throws ClassNotFoundException
+    {
         try {
             client =new socketio("10.151.36.24", 9000);
             cmd response = new cmd();
@@ -102,17 +101,22 @@ public class LogggController implements Initializable {
             response = (cmd) client.readobject();
             if(response.getCommand().equals("LOGIN") && response.getArgument().equals("OK"))
             {
-                
                 mainPane.getChildren().clear();
-                FXMLLoader loader =  new FXMLLoader(room.ListroomController.class.getResource("listroom.fxml"));
+                
                 ListroomController Controller;
-                mainPane.getChildren().add((Node)loader.load());
-                Controller = loader.getController();
+                
+                if(nodes.size()<3){
+                   Node node= (Node) loaders.get(2).load();
+                    mainPane.getChildren().add(node);
+                    nodes.add(node);
+                }
+                else mainPane.getChildren().add(nodes.get(2));
+                Controller = loaders.get(2).getController();
                
                 Controller.setMainPane(mainPane);
                 Controller.setSocket(client);
                 Controller.setUser(username.getText());
-                loader.setController(Controller);
+                loaders.get(2).setController(Controller);
                 
             }
             else if(response.getCommand().equals("LOGIN") && response.getArgument().equals("FAILED"))
@@ -123,37 +127,14 @@ public class LogggController implements Initializable {
             Logger.getLogger(LogggController.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-
+    @FXML
+    private void onEnter(ActionEvent event) throws ClassNotFoundException, Throwable {
+        login();
+    }
+    
     @FXML
     private void LoginBtn(MouseEvent event) throws ClassNotFoundException {
-        try {
-            client =new socketio("127.0.0.1", 9000);
-            cmd response = new cmd();
-            cmd login =new cmd();
-            login.setCommand("LOGIN");
-            login.setArgument("USER");
-            login.setNamaUser(username.getText());
-            login.setPassword(password.getText());
-            client.sendobject(login);
-            response = (cmd) client.readobject();
-            if(response.getCommand().equals("LOGIN") && response.getArgument().equals("OK"))
-            {
-                mainPane.getChildren().clear();
-                FXMLLoader loader =  new FXMLLoader(room.ListroomController.class.getResource("listroom.fxml"));
-                ListroomController Controller;
-                mainPane.getChildren().add((Node)loader.load());
-                Controller = loader.getController();
-                Controller.setMainPane(mainPane);
-                Controller.setSocket(client);
-                loader.setController(Controller);
-            }
-            else if(response.getCommand().equals("LOGIN") && response.getArgument().equals("FAILED"))
-            {
-                MessageBox("username dan password anda salah");
-            } 
-        } catch (IOException ex) {
-            Logger.getLogger(LogggController.class.getName()).log(Level.SEVERE, null, ex);
-        }
+        login();
     }
     
 }

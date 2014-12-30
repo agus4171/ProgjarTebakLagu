@@ -57,9 +57,9 @@ public class db_connection {
     public ArrayList<String> selectDataLagu(int Status)
     {
     
-        query = "SELECT Title, Path FROM lagu WHERE Status = '"+Status+"' LIMIT  10";
+        query = "SELECT Title, Path FROM lagu WHERE Status = '"+Status+"' LIMIT  20";
         ArrayList<String> listTitle = new ArrayList();
-        System.out.println(query);
+        //System.out.println(query);
         try {
             rstt = stt.executeQuery(query);
             while(rstt.next())
@@ -72,6 +72,23 @@ public class db_connection {
             Logger.getLogger(db_connection.class.getName()).log(Level.SEVERE, null, ex);
         }
         return listTitle;
+    }
+    
+    public String pilihJudul(String pilihLagu)
+    {
+        query = "SELECT Title FROM lagu WHERE Title = '"+pilihLagu+"'";
+        String title = "null";
+        try {
+            rstt = stt.executeQuery(query);
+            while(rstt.next())
+            {
+                //rstt = stt.executeQuery(query);
+                title = rstt.getString("Title");
+            }
+        } catch (SQLException ex) {
+            Logger.getLogger(db_connection.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return title;
     }
     
     public ArrayList selectDataPlayer(String query)

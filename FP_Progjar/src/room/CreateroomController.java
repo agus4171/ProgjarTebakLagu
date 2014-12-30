@@ -5,22 +5,19 @@
  */
 package room;
 
+import static fp_progjar.FP_Progjar.loaders;
+import static fp_progjar.FP_Progjar.nodes;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
 import javafx.fxml.FXML;
-import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.Node;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.TextField;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
-import javafx.stage.Stage;
-import objectsend.cmd;
 import objectsend.roomsAttr;
 
 /**
@@ -41,6 +38,7 @@ public class CreateroomController implements Initializable {
     private Button cancelBtn;
     private AnchorPane mainPane;
     private sockClass.socketio SockClient;
+    
     /**
      * Initializes the controller class.
      */
@@ -60,6 +58,7 @@ public class CreateroomController implements Initializable {
     public void setMainPane(AnchorPane mainPane)
     {
         this.mainPane=mainPane;
+        
     }
     public void setSocket(sockClass.socketio SockClient)
     {
@@ -78,20 +77,38 @@ public class CreateroomController implements Initializable {
         SockClient.sendobject(roomAttr);
         
         mainPane.getChildren().clear();
-        FXMLLoader loader =  new FXMLLoader(room.InRoomController.class.getResource("inRoom.fxml"));
+       
         InRoomController Controller;
-        mainPane.getChildren().add((Node)loader.load());
-        Controller = loader.getController();
+        if(nodes.size()<5){
+            Node node= (Node) loaders.get(4).load();
+            mainPane.getChildren().add(node);
+            nodes.add(node);
+        }
+        else mainPane.getChildren().add(nodes.get(4));
+
+        
+        Controller = loaders.get(4).getController();
         
         Controller.setOwner(roomName.getText());
         Controller.setMainPane(mainPane);
         Controller.setSocket(SockClient);
-        loader.setController(Controller);
+        loaders.get(4).setController(Controller);
     }
     @FXML
     private void cancel()
     {
+        mainPane.getChildren().clear();
         
+        ListroomController Controller;
+        mainPane.getChildren().add(nodes.get(2));
+        
+        
+        Controller = loaders.get(2).getController();
+
+        Controller.setMainPane(mainPane);
+        Controller.setSocket(SockClient);
+
+        loaders.get(2).setController(Controller);
     }
     
 }

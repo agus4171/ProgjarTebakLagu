@@ -14,15 +14,14 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.text.DateFormat;
-import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.print.DocFlavor;
 import objectsend.PlayerStat;
 import objectsend.file;
+import objectsend.jawabanSoal;
 import objectsend.roomsAttr;
 import soal.*;
 
@@ -44,7 +43,7 @@ public class handler implements Runnable {
     private final ArrayList<handler> alhandler;
     private ArrayList<String> aluser;
     private ArrayList<room> rooms;
-    private int skor=0;
+    private double skor=0;
     private int totalSkor=0;
     //new deklarasi by agus
     private String query;
@@ -69,7 +68,7 @@ public class handler implements Runnable {
     {
         return this.addr;
     }
-    public int getSkor()
+    public double getSkor()
     {
         return skor;
     }
@@ -111,7 +110,16 @@ public class handler implements Runnable {
                 if (o instanceof cmd) {
                     
                     request = (cmd) o;
-                    if(request.getCommand().equals("DUMMY"))this.sendobject(o);
+                    if(request.getCommand().equals("DUMMY"))
+                    {
+                        if(request.getArgument()!=null && request.getArgument().equals("EXITROOM"))
+                        for (room room : rooms) {
+                            if (room.users().contains(this)) {
+                                room.users().remove(this);
+                            }
+                        }
+                        this.sendobject(o);
+                    }
                     System.out.println(request.getCommand() + " " + request.getArgument());
                     if (request.getCommand().equals("LOGIN")) {
                         command = new cmd();
@@ -288,12 +296,19 @@ public class handler implements Runnable {
                                     command.setNumberTracks(tracks);
                                     sockfile.sendobject(command);
                                     ArrayList<ArrayList<String>> theSoal = new ArrayList<>();
+                                    Soal_pilihan soal =new Soal_pilihan();
+                                    soal.queryLagu(nlevel);
                                     
                                     for(int i=0;i<tracks;i++)
                                     {
                                         System.out.println(i);
-                                        Soal_pilihan soal =new Soal_pilihan();
-                                        theSoal.add(soal.getListJudul(i, nlevel));
+                                        
+                                        ArrayList<String> judulBuffer = new ArrayList<>();
+                                        judulBuffer=soal.getListJudul(i);
+                                        
+                                        
+                                        theSoal.add(judulBuffer);
+                                        
                                         File fLagu=new File(soal.getPath());
                                         byte[] bytefile= new byte[10240];
                                         int byteread;
@@ -314,9 +329,11 @@ public class handler implements Runnable {
                                     roomsAttr room = new roomsAttr();
                                     room.setCommand("GAME");
                                     room.setArgument("READY");
+                                    
                                     room.setName(roomNames);
                                     room.setLevel(nlvl);
                                     sendobject(room);
+                                    System.out.println(IP + " " + room);
                                     
                                     
                                 } catch (IOException ex) {
@@ -340,6 +357,21 @@ public class handler implements Runnable {
                          rooms.add(room);
                     }
                     
+                }
+                else if(o instanceof jawabanSoal)
+                {
+                    jawabanSoal answer= (jawabanSoal) o;
+                    String jawaban= answer.getJawaban();
+                    long time =answer.getWaktu()/1000;
+                    Soal_pilihan soal =new Soal_pilihan();
+                    
+                    System.out.println(time);
+                    if(!soal.getJawaban(jawaban).equals("null"))
+                    {
+                        skor+= 100-(time*5);
+                        System.out.println(time +" " + skor);
+                    }
+                    else System.out.println("jawaban salah");
                 }
 
             }
